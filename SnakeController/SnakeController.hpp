@@ -48,10 +48,6 @@ private:
     void handleDirectionInd(std::unique_ptr<Event>);
     void handleFoodInd(std::unique_ptr<Event>);
     void handleFoodResp(std::unique_ptr<Event>);
-
-    void updateFoodPosition(Position position, std::function<void()> clearPolicy);
-    void sendClearOldFood();
-    void sendPlaceNewFood(Position position);
 };
 
 
