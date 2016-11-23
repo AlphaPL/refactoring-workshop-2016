@@ -88,11 +88,8 @@ void Segments::nextStep(const World &world)
 
 void Segments::removeTailSegment()
 {
-    auto tail = removeTail();
-
     DisplayInd clearTail;
-    clearTail.x = tail.x;
-    clearTail.y = tail.y;
+    clearTail.position = removeTail();
     clearTail.value = Cell_FREE;
 
     m_displayPort.send(std::make_unique<EventT<DisplayInd>>(clearTail));
@@ -103,8 +100,7 @@ void Segments::addHeadSegment(Position position)
     addHead(position);
 
     DisplayInd placeNewHead;
-    placeNewHead.x = position.x;
-    placeNewHead.y = position.y;
+    placeNewHead.position = position;
     placeNewHead.value = Cell_SNAKE;
 
     m_displayPort.send(std::make_unique<EventT<DisplayInd>>(placeNewHead));

@@ -46,8 +46,7 @@ void World::sendPlaceNewFood(Position position)
     m_foodPosition = position;
 
     DisplayInd placeNewFood;
-    placeNewFood.x = position.x;
-    placeNewFood.y = position.y;
+    placeNewFood.position = position;
     placeNewFood.value = Cell_FOOD;
 
     m_displayPort.send(std::make_unique<EventT<DisplayInd>>(placeNewFood));
@@ -56,8 +55,7 @@ void World::sendPlaceNewFood(Position position)
 void World::sendClearOldFood()
 {
     DisplayInd clearOldFood;
-    clearOldFood.x = m_foodPosition.x;
-    clearOldFood.y = m_foodPosition.y;
+    clearOldFood.position = m_foodPosition;
     clearOldFood.value = Cell_FREE;
 
     m_displayPort.send(std::make_unique<EventT<DisplayInd>>(clearOldFood));

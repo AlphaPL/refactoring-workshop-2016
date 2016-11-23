@@ -114,18 +114,12 @@ void Controller::handleDirectionInd(std::unique_ptr<Event> e)
 
 void Controller::handleFoodInd(std::unique_ptr<Event> e)
 {
-    auto newFood = payload<FoodInd>(*e);
-    auto newFoodPosition = Position{newFood.x, newFood.y};
-
-    m_world->updateFoodPosition(newFoodPosition, *m_segments);
+    m_world->updateFoodPosition(payload<FoodResp>(*e).position, *m_segments);
 }
 
 void Controller::handleFoodResp(std::unique_ptr<Event> e)
 {
-    auto newFood = payload<FoodResp>(*e);
-    auto newFoodPosition = Position{newFood.x, newFood.y};
-
-    m_world->placeFood(newFoodPosition, *m_segments);
+    m_world->placeFood(payload<FoodResp>(*e).position, *m_segments);
 }
 
 void Controller::receive(std::unique_ptr<Event> e)
