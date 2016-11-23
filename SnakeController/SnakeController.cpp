@@ -110,8 +110,7 @@ void Controller::sendPlaceNewFood(Position position)
     m_world->setFoodPosition(position);
 
     DisplayInd placeNewFood;
-    placeNewFood.x = position.x;
-    placeNewFood.y = position.y;
+    placeNewFood.position = position;
     placeNewFood.value = Cell_FOOD;
 
     m_displayPort.send(std::make_unique<EventT<DisplayInd>>(placeNewFood));
@@ -119,11 +118,8 @@ void Controller::sendPlaceNewFood(Position position)
 
 void Controller::sendClearOldFood()
 {
-    auto foodPosition = m_world->getFoodPosition();
-
     DisplayInd clearOldFood;
-    clearOldFood.x = foodPosition.x;
-    clearOldFood.y = foodPosition.y;
+    clearOldFood.position = m_world->getFoodPosition();
     clearOldFood.value = Cell_FREE;
 
     m_displayPort.send(std::make_unique<EventT<DisplayInd>>(clearOldFood));
@@ -131,11 +127,8 @@ void Controller::sendClearOldFood()
 
 void Controller::removeTailSegment()
 {
-    auto tail = m_segments->removeTail();
-
     DisplayInd clearTail;
-    clearTail.x = tail.x;
-    clearTail.y = tail.y;
+    clearTail.position = m_segments->removeTail();
     clearTail.value = Cell_FREE;
 
     m_displayPort.send(std::make_unique<EventT<DisplayInd>>(clearTail));
@@ -146,8 +139,7 @@ void Controller::addHeadSegment(Position position)
     m_segments->addHead(position);
 
     DisplayInd placeNewHead;
-    placeNewHead.x = position.x;
-    placeNewHead.y = position.y;
+    placeNewHead.position = position;
     placeNewHead.value = Cell_SNAKE;
 
     m_displayPort.send(std::make_unique<EventT<DisplayInd>>(placeNewHead));
@@ -197,19 +189,12 @@ void Controller::updateFoodPosition(Position position, std::function<void()> cle
 
 void Controller::handleFoodInd(std::unique_ptr<Event> e)
 {
-    auto newFood = payload<FoodInd>(*e);
-    auto newFoodPosition = Position{newFood.x, newFood.y};
-
-    updateFoodPosition(newFoodPosition, std::bind(&Controller::sendClearOldFood, this));
+    updateFoodPosition(payload<FoodInd>(*e).position, std::bind(&Controller::sendClearOldFood, this));
 }
 
 void Controller::handleFoodResp(std::unique_ptr<Event> e)
 {
-    static auto noCleanPolicy = []{};
-    auto newFood = payload<FoodResp>(*e);
-    auto newFoodPosition = Position{newFood.x, newFood.y};
-
-    updateFoodPosition(newFoodPosition, noCleanPolicy);
+    updateFoodPosition(payload<FoodResp>(*e).position, []{});
 }
 
 void Controller::receive(std::unique_ptr<Event> e)
