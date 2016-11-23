@@ -79,14 +79,11 @@ Direction readDirection(std::istream& istr)
 }
 
 Controller::Controller(IPort& displayPort, IPort& foodPort, IPort& scorePort, std::string const& initialConfiguration)
-    : m_displayPort(displayPort),
-      m_foodPort(foodPort),
-      m_scorePort(scorePort)
 {
     std::istringstream istr(initialConfiguration);
 
-    m_world = readWorld(istr, m_displayPort, m_foodPort);
-    m_segments = std::make_unique<Segments>(m_displayPort, m_scorePort, readDirection(istr));
+    m_world = readWorld(istr, displayPort, foodPort);
+    m_segments = std::make_unique<Segments>(displayPort, scorePort, readDirection(istr));
 
     int length;
     istr >> length;
