@@ -45,7 +45,7 @@ Position readFoodPosition(std::istream& istr)
     return position;
 }
 
-std::unique_ptr<World> readWorld(std::istream& istr)
+std::unique_ptr<World> readWorld(std::istream& istr, IPort& foodPort)
 {
     if (not checkControl(istr, 'W')) {
         throw ConfigurationError();
@@ -53,7 +53,7 @@ std::unique_ptr<World> readWorld(std::istream& istr)
 
     auto worldDimension = readWorldDimension(istr);
     auto foodPosition = readFoodPosition(istr);
-    return std::make_unique<World>(worldDimension, foodPosition);
+    return std::make_unique<World>(foodPort, worldDimension, foodPosition);
 }
 
 Direction readDirection(std::istream& istr)
@@ -85,8 +85,8 @@ Controller::Controller(IPort& displayPort, IPort& foodPort, IPort& scorePort, st
 {
     std::istringstream istr(initialConfiguration);
 
-    m_world = readWorld(istr);
-    m_segments = std::make_unique<Segments>(readDirection(istr));
+    m_world = readWorld(istr, m_foodPort);
+    m_segments = std::make_unique<Segments>(m_displayPort, m_scorePort, readDirection(istr));
 
     int length;
     istr >> length;
@@ -129,54 +129,9 @@ void Controller::sendClearOldFood()
     m_displayPort.send(std::make_unique<EventT<DisplayInd>>(clearOldFood));
 }
 
-void Controller::removeTailSegment()
-{
-    auto tail = m_segments->removeTail();
-
-    DisplayInd clearTail;
-    clearTail.x = tail.x;
-    clearTail.y = tail.y;
-    clearTail.value = Cell_FREE;
-
-    m_displayPort.send(std::make_unique<EventT<DisplayInd>>(clearTail));
-}
-
-void Controller::addHeadSegment(Position position)
-{
-    m_segments->addHead(position);
-
-    DisplayInd placeNewHead;
-    placeNewHead.x = position.x;
-    placeNewHead.y = position.y;
-    placeNewHead.value = Cell_SNAKE;
-
-    m_displayPort.send(std::make_unique<EventT<DisplayInd>>(placeNewHead));
-}
-
-void Controller::removeTailSegmentIfNotScored(Position position)
-{
-    if (position == m_world->getFoodPosition()) {
-        m_scorePort.send(std::make_unique<EventT<ScoreInd>>());
-        m_foodPort.send(std::make_unique<EventT<FoodReq>>());
-    } else {
-        removeTailSegment();
-    }
-}
-
-void Controller::updateSegmentsIfSuccessfullMove(Position position)
-{
-    if (m_segments->isCollision(position) or not m_world->contains(position)) {
-        m_scorePort.send(std::make_unique<EventT<LooseInd>>());
-    } else {
-        addHeadSegment(position);
-        removeTailSegmentIfNotScored(position);
-    }
-}
-
 void Controller::handleTimeoutInd()
 {
-    auto newHead = m_segments->nextHead();
-    updateSegmentsIfSuccessfullMove(newHead);
+    m_segments->nextStep(*m_world);
 }
 
 void Controller::handleDirectionInd(std::unique_ptr<Event> e)
